@@ -20,31 +20,31 @@ class EditorController extends GetxController {
     // Implementation for editing node properties
   }
 
-  void startConnection(NetworkNode node) {
-    // Implementation for starting a connection
-  }
-
+  /// Deletes a node and all its connections.
+  ///
+  /// This method removes all the connections that involve the given node,
+  /// and then removes the node itself from the list of nodes.
+  ///
+  /// When a connection is removed, the connected port of the other node is
+  /// also updated to remove the connection from its list of connections.
+  ///
+  /// Finally, the list of nodes and the list of connections are refreshed to
+  /// update the UI.
   void deleteNode(NetworkNode node) {
-    // Step 1: Clear connections from connected ports on other nodes
     for (var port in node.ports) {
       for (var connection in port.connections) {
-        // Find the connected node
         var connectedNode = nodes.firstWhere((n) => n.id == connection.nodeId);
-        // Find and clear the connected port
         var connectedPort =
             connectedNode.ports.firstWhere((p) => p.id == connection.portId);
         connectedPort.connections.removeWhere((conn) => conn.nodeId == node.id);
       }
-      // Clear connections from the port being deleted
       port.connections.clear();
     }
 
-    // Step 2: Remove all connections involving this node from the connections list
     connections.removeWhere((connection) =>
         connection['fromNode'] == node.id || connection['toNode'] == node.id);
     connections.refresh();
 
-    // Step 3: Finally remove the node itself
     nodes.remove(node);
     nodes.refresh();
   }

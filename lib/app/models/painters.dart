@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kulyok/app/models/network_nodes.dart';
+import 'dart:math' as math;
 
 class GridPainter extends CustomPainter {
   @override
@@ -32,6 +33,100 @@ class GridPainter extends CustomPainter {
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
 
+class SmoothConnectionPainter extends CustomPainter {
+  final Offset from;
+  final Offset to;
+  final double cornerRadius;
+
+  SmoothConnectionPainter({
+    required this.from,
+    required this.to,
+    this.cornerRadius = 6.0,
+  });
+
+  void _drawEndpoint(Canvas canvas, Offset position, Paint linePaint,
+      {bool isStart = false}) {
+    // Draw interface connector
+    final rect = Rect.fromCenter(
+      center: position,
+      width: 16,
+      height: 8,
+    );
+
+    // Use the same paint as the line for consistent appearance
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(1)),
+      linePaint,
+    );
+
+    // Draw the connection status dot for the start point
+    if (isStart) {
+      canvas.drawCircle(
+        position,
+        2.0,
+        Paint()
+          ..color = Colors.green
+          ..style = PaintingStyle.fill,
+      );
+    }
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color.fromARGB(255, 78, 78, 78)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+    // Draw the connection line
+    final path = Path();
+    path.moveTo(from.dx, from.dy);
+
+    final dx = to.dx - from.dx;
+    final dy = to.dy - from.dy;
+    final shouldGoVerticalFirst = dx.abs() < dy.abs();
+
+    if (shouldGoVerticalFirst) {
+      if (dy.abs() > cornerRadius * 2) {
+        path.lineTo(from.dx, to.dy - (dy > 0 ? cornerRadius : -cornerRadius));
+        path.quadraticBezierTo(
+          from.dx,
+          to.dy,
+          from.dx + (dx > 0 ? cornerRadius : -cornerRadius),
+          to.dy,
+        );
+      } else {
+        path.lineTo(from.dx, to.dy);
+      }
+      path.lineTo(to.dx, to.dy);
+    } else {
+      if (dx.abs() > cornerRadius * 2) {
+        path.lineTo(to.dx - (dx > 0 ? cornerRadius : -cornerRadius), from.dy);
+        path.quadraticBezierTo(
+          to.dx,
+          from.dy,
+          to.dx,
+          from.dy + (dy > 0 ? cornerRadius : -cornerRadius),
+        );
+      } else {
+        path.lineTo(to.dx, from.dy);
+      }
+      path.lineTo(to.dx, to.dy);
+    }
+
+    // Draw the main connection line
+    canvas.drawPath(path, paint);
+
+    // Draw both endpoints with connector boxes
+    _drawEndpoint(canvas, from, paint,
+        isStart: true); // Start point with green dot
+    _drawEndpoint(canvas, to, paint); // End point
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
 class ConnectionLine extends StatelessWidget {
   final NetworkNode fromNode;
   final NetworkNode toNode;
@@ -42,7 +137,6 @@ class ConnectionLine extends StatelessWidget {
   });
 
   Offset _getNodeCenter(NetworkNode node) {
-    // Node width is 75 and height is 75 from NodeWidget
     const nodeSize = 75.0;
     return Offset(
       node.position.dx + nodeSize / 2,
@@ -59,67 +153,14 @@ class ConnectionLine extends StatelessWidget {
       left: 0,
       top: 0,
       child: CustomPaint(
-        painter: OrthogonalLinePainter(
+        painter: SmoothConnectionPainter(
           from: fromCenter,
           to: toCenter,
+          cornerRadius: 6.0,
         ),
         child: Container(),
       ),
     );
-  }
-}
-
-class OrthogonalLinePainter extends CustomPainter {
-  final Offset from;
-  final Offset to;
-
-  OrthogonalLinePainter({required this.from, required this.to});
-
-  List<Offset> _calculateOrthogonalPath() {
-    final points = <Offset>[];
-    points.add(from);
-
-    // Calculate the middle point for the orthogonal path
-    final dx = (to.dx - from.dx).abs();
-    final dy = (to.dy - from.dy).abs();
-
-    // Decide whether to go horizontal first or vertical first based on the longer distance
-    if (dx > dy) {
-      // Go horizontal first
-      points.add(Offset(to.dx, from.dy));
-    } else {
-      // Go vertical first
-      points.add(Offset(from.dx, to.dy));
-    }
-
-    points.add(to);
-    return points;
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.blue
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-
-    // Get the path points
-    final points = _calculateOrthogonalPath();
-
-    // Draw the path
-    final path = Path();
-    path.moveTo(points.first.dx, points.first.dy);
-
-    for (int i = 1; i < points.length; i++) {
-      path.lineTo(points[i].dx, points[i].dy);
-    }
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true; // Changed to true since we want to repaint when points change
   }
 }
 
