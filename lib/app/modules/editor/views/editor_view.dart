@@ -100,12 +100,15 @@ class EditorView extends GetView<EditorController> {
                       children: [
                         // Draw connections
                         ...controller.connections.map((connection) {
-                          final fromPosition =
-                              connection['fromPosition'] as Offset;
-                          final toPosition = connection['toPosition'] as Offset;
+                          final fromNode = controller.nodes.firstWhere(
+                            (node) => node.id == connection['fromNode'],
+                          );
+                          final toNode = controller.nodes.firstWhere(
+                            (node) => node.id == connection['toNode'],
+                          );
                           return ConnectionLine(
-                            from: fromPosition,
-                            to: toPosition,
+                            fromNode: fromNode,
+                            toNode: toNode,
                           );
                         }),
                         // Draw nodes

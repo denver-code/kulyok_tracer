@@ -8,6 +8,11 @@ class DeviceToolbar extends StatelessWidget {
 
   DeviceToolbar({super.key});
 
+  // generate random ID
+  String _generateRandomId() {
+    return DateTime.now().millisecondsSinceEpoch.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -32,7 +37,7 @@ class DeviceToolbar extends StatelessWidget {
               ],
               onDeviceSelected: (deviceName) {
                 final newRouter = NetworkNode(
-                  id: 'router_${controller.nodes.length}',
+                  id: 'router_${controller.nodes.length}_${_generateRandomId()}',
                   name: deviceName,
                   type: 'router',
                   ip: '10.0.0.${controller.nodes.length + 1}',
@@ -53,7 +58,7 @@ class DeviceToolbar extends StatelessWidget {
               ],
               onDeviceSelected: (deviceName) {
                 final newDevice = NetworkNode(
-                  id: '${deviceName.toLowerCase()}_${controller.nodes.length}',
+                  id: '${deviceName.toLowerCase()}_${controller.nodes.length}_${_generateRandomId()}',
                   name: '$deviceName ${controller.nodes.length}',
                   type: deviceName.toLowerCase(),
                   ip: '192.168.1.${controller.nodes.length + 1}',

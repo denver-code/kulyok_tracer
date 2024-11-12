@@ -12,6 +12,43 @@ class EditorController extends GetxController {
   var sourceNode = Rx<NetworkNode?>(null); // Added to track source node
   var sourcePort = Rx<Port?>(null); // Added to track source port
 
+  void openNode(NetworkNode node) {
+    // Implementation for opening node details
+  }
+
+  void editNode(NetworkNode node) {
+    // Implementation for editing node properties
+  }
+
+  void startConnection(NetworkNode node) {
+    // Implementation for starting a connection
+  }
+
+  void deleteNode(NetworkNode node) {
+    // Step 1: Clear connections from connected ports on other nodes
+    for (var port in node.ports) {
+      for (var connection in port.connections) {
+        // Find the connected node
+        var connectedNode = nodes.firstWhere((n) => n.id == connection.nodeId);
+        // Find and clear the connected port
+        var connectedPort =
+            connectedNode.ports.firstWhere((p) => p.id == connection.portId);
+        connectedPort.connections.removeWhere((conn) => conn.nodeId == node.id);
+      }
+      // Clear connections from the port being deleted
+      port.connections.clear();
+    }
+
+    // Step 2: Remove all connections involving this node from the connections list
+    connections.removeWhere((connection) =>
+        connection['fromNode'] == node.id || connection['toNode'] == node.id);
+    connections.refresh();
+
+    // Step 3: Finally remove the node itself
+    nodes.remove(node);
+    nodes.refresh();
+  }
+
   void addNode(NetworkNode node) {
     nodes.add(node);
   }

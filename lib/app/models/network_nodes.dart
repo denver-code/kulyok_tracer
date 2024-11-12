@@ -91,13 +91,126 @@ class NodeWidget extends StatelessWidget {
     this.isDragging = false,
   });
 
+  void openNode(NetworkNode node) {
+    // Implementation for opening node details
+  }
+
+  void editNode(NetworkNode node) {
+    // Implementation for editing node properties
+  }
+
+  void startConnection(NetworkNode node) {
+    // Implementation for starting a connection
+  }
+
+  void deleteNode(NetworkNode node) {
+    // Implementation for deleting the node
+  }
+
+  void _showContextMenu(BuildContext context, EditorController controller) {
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final Offset position = button.localToGlobal(Offset.zero);
+
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        overlay.size.width - position.dx,
+        overlay.size.height - position.dy,
+      ),
+      color: const Color(0xFF232323),
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      items: <PopupMenuEntry<String>>[
+        _buildMenuItem(
+          'open',
+          'Open',
+          Icons.open_in_new,
+        ),
+        _buildMenuItem(
+          'edit',
+          'Edit',
+          Icons.edit,
+        ),
+        _buildMenuItem(
+          'connect',
+          'Connect',
+          Icons.cable,
+        ),
+        const PopupMenuDivider(),
+        _buildMenuItem(
+          'delete',
+          'Delete',
+          Icons.delete_outline,
+          isDestructive: true,
+        ),
+      ],
+    ).then((String? value) {
+      if (value == null) return;
+
+      switch (value) {
+        case 'open':
+          controller.openNode(node);
+          break;
+        case 'edit':
+          controller.editNode(node);
+          break;
+        case 'delete':
+          controller.deleteNode(node);
+          break;
+      }
+    });
+  }
+
+  PopupMenuItem<String> _buildMenuItem(
+    String value,
+    String label,
+    IconData icon, {
+    bool isDestructive = false,
+  }) {
+    return PopupMenuItem<String>(
+      value: value,
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(17),
+          color: const Color.fromARGB(255, 26, 26, 26),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isDestructive ? Colors.red : Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: TextStyle(
+                color: isDestructive ? Colors.red : Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<EditorController>();
 
     return Obx(() => Material(
           color: Colors.transparent,
-          child: InkWell(
+          child: GestureDetector(
+            onSecondaryTap: () => _showContextMenu(context, controller),
             onTap: () => controller.handleNodeTap(node),
             child: Row(
               children: [
