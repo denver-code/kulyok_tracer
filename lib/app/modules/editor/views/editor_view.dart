@@ -70,20 +70,20 @@ class EditorView extends GetView<EditorController> {
                           fontSize: 15,
                           fontWeight: FontWeight.w500)),
                   const Spacer(),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.supervised_user_circle_sharp,
-                            color: Colors.white),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon:
-                            Icon(Icons.data_usage_rounded, color: Colors.white),
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
+                  // Row(
+                  //   children: [
+                  //     IconButton(
+                  //       icon: Icon(Icons.supervised_user_circle_sharp,
+                  //           color: Colors.white),
+                  //       onPressed: () {},
+                  //     ),
+                  //     IconButton(
+                  //       icon:
+                  //           Icon(Icons.data_usage_rounded, color: Colors.white),
+                  //       onPressed: () {},
+                  //     ),
+                  //   ],
+                  // ),
                 ],
               ),
             ),

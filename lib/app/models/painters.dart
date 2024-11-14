@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:kulyok/app/models/network_nodes.dart';
-import 'dart:math' as math;
 
 class GridPainter extends CustomPainter {
   @override
@@ -132,6 +131,7 @@ class ConnectionLine extends StatelessWidget {
   final NetworkNode toNode;
 
   const ConnectionLine({
+    super.key,
     required this.fromNode,
     required this.toNode,
   });

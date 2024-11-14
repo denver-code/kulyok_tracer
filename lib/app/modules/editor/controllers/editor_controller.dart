@@ -111,6 +111,7 @@ class EditorController extends GetxController {
                     );
                     Get.back();
                     resetWiringState();
+                    toggleWiringMode();
                   }
                 }
               },
