@@ -38,6 +38,15 @@ class ToolbarWidget extends StatelessWidget {
                   )),
               onPressed: controller.toggleDeletingMode,
             ),
+            IconButton(
+              icon: Obx(() => Icon(
+                    Icons.insert_link_outlined,
+                    color: controller.isAutoConnectMode.value
+                        ? Colors.yellow
+                        : Colors.white,
+                  )),
+              onPressed: controller.toggleAutoWiringMode,
+            ),
           ],
         ),
       ),

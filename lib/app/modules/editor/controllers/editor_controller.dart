@@ -8,6 +8,7 @@ class EditorController extends GetxController {
   var connections = <Map<String, dynamic>>[].obs;
   RxBool isWiringMode = false.obs;
   RxBool isDeletingMode = false.obs;
+  RxBool isAutoConnectMode = false.obs;
   var selectedNode = Rx<NetworkNode?>(null);
   var selectedPort = Rx<Port?>(null);
   var isCreatingConnection = false.obs;
@@ -32,6 +33,8 @@ class EditorController extends GetxController {
       case 'X':
         isDeletingMode.toggle();
         isWiringMode.value = false;
+      case 'A':
+        isAutoConnectMode.toggle();
       case 'R':
         {
           final newRouter = NetworkNode(
@@ -97,6 +100,8 @@ class EditorController extends GetxController {
     isDeletingMode.toggle();
   }
 
+  void toggleAutoWiringMode() => isAutoConnectMode.toggle();
+
   void resetWiringState() {
     selectedNode.value = null;
     selectedPort.value = null;
@@ -116,11 +121,33 @@ class EditorController extends GetxController {
       // First node selection
       sourceNode.value = node;
       isCreatingConnection.value = true;
-      _showPortSelectionDialog(node, isSource: true);
+      if (isAutoConnectMode.value) {
+        var port =
+            node.ports.firstWhereOrNull((port) => port.connections.isEmpty);
+        sourcePort.value = port;
+      } else {
+        _showPortSelectionDialog(node, isSource: true);
+      }
     } else if (sourceNode.value?.id != node.id) {
       // Second node selection
       selectedNode.value = node;
-      _showPortSelectionDialog(node, isSource: false);
+      if (isAutoConnectMode.value) {
+        var port =
+            node.ports.firstWhereOrNull((port) => port.connections.isEmpty);
+        selectedPort.value = port;
+        if (port != null) {
+          addConnection(
+            sourceNode.value!.id,
+            sourcePort.value!.id,
+            node.id,
+            port.id,
+          );
+          resetWiringState();
+          toggleWiringMode();
+        }
+      } else {
+        _showPortSelectionDialog(node, isSource: false);
+      }
     }
   }
 
