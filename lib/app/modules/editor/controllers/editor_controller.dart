@@ -1,16 +1,53 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:kulyok/app/models/network_nodes.dart';
+import 'package:flutter/services.dart';
 
 class EditorController extends GetxController {
   var nodes = <NetworkNode>[].obs;
   var connections = <Map<String, dynamic>>[].obs;
-  var isWiringMode = false.obs;
+  RxBool isWiringMode = false.obs;
+  RxBool isDeletingMode = false.obs;
   var selectedNode = Rx<NetworkNode?>(null);
   var selectedPort = Rx<Port?>(null);
-  var isCreatingConnection = false.obs; // Added this state variable
-  var sourceNode = Rx<NetworkNode?>(null); // Added to track source node
-  var sourcePort = Rx<Port?>(null); // Added to track source port
+  var isCreatingConnection = false.obs;
+  var sourceNode = Rx<NetworkNode?>(null);
+  var sourcePort = Rx<Port?>(null);
+
+  // Export the list of nodes and connections
+  List<NetworkNode> getNodes() => nodes.toList();
+  List<Map<String, dynamic>> getConnections() => connections.toList();
+
+  String _generateRandomId() {
+    return DateTime.now().millisecondsSinceEpoch.toString();
+  }
+
+  bool _onKey(KeyEvent event) {
+    final key = event.logicalKey.keyLabel;
+    if (event is! KeyDownEvent) return false;
+    switch (key) {
+      case 'L':
+        isWiringMode.toggle();
+        isDeletingMode.value = false;
+      case 'X':
+        isDeletingMode.toggle();
+        isWiringMode.value = false;
+      case 'R':
+        {
+          final newRouter = NetworkNode(
+            id: 'router_${nodes.length}_${_generateRandomId()}',
+            name: 'Router ${nodes.length + 1}',
+            type: 'router',
+            ip: '10.0.0.${nodes.length + 1}',
+            position: Offset(100, 100 + nodes.length * 50),
+          );
+          addNode(newRouter);
+        }
+      default:
+        return false;
+    }
+    return true;
+  }
 
   void openNode(NetworkNode node) {
     // Implementation for opening node details
@@ -20,16 +57,6 @@ class EditorController extends GetxController {
     // Implementation for editing node properties
   }
 
-  /// Deletes a node and all its connections.
-  ///
-  /// This method removes all the connections that involve the given node,
-  /// and then removes the node itself from the list of nodes.
-  ///
-  /// When a connection is removed, the connected port of the other node is
-  /// also updated to remove the connection from its list of connections.
-  ///
-  /// Finally, the list of nodes and the list of connections are refreshed to
-  /// update the UI.
   void deleteNode(NetworkNode node) {
     for (var port in node.ports) {
       for (var connection in port.connections) {
@@ -54,10 +81,20 @@ class EditorController extends GetxController {
   }
 
   void toggleWiringMode() {
+    if (isDeletingMode.value) {
+      isDeletingMode.toggle();
+    }
     isWiringMode.toggle();
     if (!isWiringMode.value) {
       resetWiringState();
     }
+  }
+
+  void toggleDeletingMode() {
+    if (isWiringMode.value) {
+      toggleWiringMode();
+    }
+    isDeletingMode.toggle();
   }
 
   void resetWiringState() {
@@ -69,6 +106,10 @@ class EditorController extends GetxController {
   }
 
   void handleNodeTap(NetworkNode node) {
+    if (isDeletingMode.value) {
+      deleteNode(node);
+      return;
+    }
     if (!isWiringMode.value) return;
 
     if (!isCreatingConnection.value) {
@@ -245,5 +286,17 @@ class EditorController extends GetxController {
       connections.refresh();
       nodes.refresh();
     }
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    ServicesBinding.instance.keyboard.addHandler(_onKey);
+  }
+
+  @override
+  void onClose() {
+    ServicesBinding.instance.keyboard.removeHandler(_onKey);
+    super.onClose();
   }
 }
